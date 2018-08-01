@@ -7,5 +7,5 @@
 #SBATCH -t 2:00:00
 
 module add Python/3.6.5
-applications/rna_seq.sh
+applications/RNA/rna_seq.sh
 

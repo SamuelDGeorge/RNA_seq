@@ -7,5 +7,6 @@
 #SBATCH -t 2:00:00
 
 module add Python/3.6.5
+module add salmon
 applications/rna/rna_seq.sh
 

@@ -1,0 +1,47 @@
+#trim the RNA Samples
+
+bbduk.sh in=raw_files/Raw_Forward_Sample_1.fastq.gz \
+in2=raw_files/Raw_Reverse_Sample_1.fastq.gz \
+out=raw_trimmed/Raw_Forward_Trimmed_1.fastq.gz \
+out2=raw_trimmed/Raw_Reverse_Trimmed_1.fastq.gz \
+ktrim=r k=23 hdist=1 minlen=50 ref=/home/sdgeorge/RNASEQ/tools/bbmap/resources/adapters.fa
+
+bbduk.sh in=raw_files/Raw_Forward_Sample_2.fastq.gz \
+in2=raw_files/Raw_Reverse_Sample_2.fastq.gz \
+out=raw_trimmed/Raw_Forward_Trimmed_2.fastq.gz \
+out2=raw_trimmed/Raw_Reverse_Trimmed_2.fastq.gz \
+ktrim=r k=23 hdist=1 minlen=50 ref=/home/sdgeorge/RNASEQ/tools/bbmap/resources/adapters.fa
+
+
+#allign the samples, run this the first time to generate a reference from the human genome
+bbmap.sh threads=15 in=raw_trimmed/Raw_Forward_Trimmed_1.fastq.gz \
+in2=raw_trimmed/Raw_Reverse_Trimmed_1.fastq.gz \
+ref=/home/sdgeorge/Storage/RNASEQ_Data/genome_reference/hg38.fa \
+path=/home/sdgeorge/Storage/RNASEQ_Data/genome_index/ \
+out=mapped_output/RNASEQ_Aligned_1.bam \
+maxindel=10000 intronlen=10 ambig=random qin=33 sam=1.4
+
+bbmap.sh threads=15 in=raw_trimmed/Raw_Forward_Trimmed_2.fastq.gz \
+in2=raw_trimmed/Raw_Reverse_Trimmed_2.fastq.gz \
+path=/home/sdgeorge/Storage/RNASEQ_Data/genome_index/ \
+out=mapped_output/RNASEQ_Aligned_2.bam \
+maxindel=10000 intronlen=10 ambig=random qin=33 sam=1.4
+
+#Sort the output files
+samtools sort -o sorted_output/RNASEQ_Sorted_1.bam \
+mapped_output/RNASEQ_Aligned_1.bam 
+
+samtools sort -o sorted_output/RNASEQ_Sorted_2.bam \
+mapped_output/RNASEQ_Aligned_2.bam 
+
+#Index Them
+samtools index sorted_output/RNASEQ_Sorted_1.bam 
+
+samtools index sorted_output/RNASEQ_Sorted_2.bam 
+
+#Do Counts
+featureCounts -a /home/sdgeorge/Storage/RNASEQ_Data/gtf_file/genes_ucsc_hg38.gtf \
+-o count_output/RNASEQ_Counts.txt \
+-T 15 -t exon -g gene_id -s 2 \
+sorted_output/RNASEQ_Sorted_1.bam \
+sorted_output/RNASEQ_Sorted_2.bam
